@@ -1,12 +1,4 @@
 GIT
-  remote: git://github.com/QueueClassic/queue_classic.git
-  revision: d144db29f1436e9e8b3c7a1a1ecd4442316a9ecd
-  branch: master
-  specs:
-    queue_classic (3.2.0.alpha)
-      pg (>= 0.17, < 0.19)
-
-GIT
   remote: git://github.com/mikel/mail.git
   revision: 9c313a401729b9aa9177878836829a61adf67b54
   branch: master
@@ -314,7 +306,6 @@ DEPENDENCIES
   nokogiri (>= 1.6.7.rc3)
   pg (>= 0.18.0)
   psych (~> 2.0)
-  queue_classic!
   racc (>= 1.4.6)
   rack!
   rack-cache (~> 1.2)

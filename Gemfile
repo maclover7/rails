@@ -52,7 +52,6 @@ group :job do
   gem 'resque-scheduler', require: false
   gem 'sidekiq', require: false
   gem 'sucker_punch', require: false
-  gem 'queue_classic', github: "QueueClassic/queue_classic", branch: 'master', require: false, platforms: :ruby
   gem 'sneakers', require: false
   gem 'sequel', require: false
 end
