@@ -321,7 +321,6 @@ DEPENDENCIES
   byebug
   coffee-rails (~> 4.1.0)
   dalli (>= 2.2.1)
-  delayed_job
   delayed_job_active_record
   globalid!
   jquery-rails!
