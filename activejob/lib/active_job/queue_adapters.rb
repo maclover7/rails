@@ -109,7 +109,6 @@ module ActiveJob
 
     autoload :AsyncAdapter
     autoload :InlineAdapter
-    autoload :SuckerPunchAdapter
     autoload :TestAdapter
 
     ADAPTER = 'Adapter'.freeze
