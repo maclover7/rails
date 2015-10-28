@@ -109,7 +109,6 @@ module ActiveJob
 
     autoload :AsyncAdapter
     autoload :InlineAdapter
-    autoload :BackburnerAdapter
     autoload :DelayedJobAdapter
     autoload :QuAdapter
     autoload :QueAdapter
