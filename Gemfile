@@ -54,7 +54,6 @@ group :job do
   gem 'sucker_punch', require: false
   gem 'queue_classic', github: "QueueClassic/queue_classic", branch: 'master', require: false, platforms: :ruby
   gem 'sneakers', require: false
-  gem 'que', require: false
   gem 'sequel', require: false
 end
 

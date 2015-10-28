@@ -1,6 +1,6 @@
 require 'rake/testtask'
 
-ACTIVEJOB_ADAPTERS = %w(async inline que queue_classic resque sidekiq sneakers sucker_punch test)
+ACTIVEJOB_ADAPTERS = %w(async inline queue_classic resque sidekiq sneakers sucker_punch test)
 ACTIVEJOB_ADAPTERS -= %w(queue_classic) if defined?(JRUBY_VERSION)
 
 task default: :test
