@@ -7,19 +7,6 @@ GIT
       pg (>= 0.17, < 0.19)
 
 GIT
-  remote: git://github.com/bkeepers/qu.git
-  revision: d098e2657c92e89a6413bebd9c033930759c061f
-  branch: master
-  specs:
-    qu (0.2.0)
-    qu-rails (0.2.0)
-      qu (= 0.2.0)
-      railties (>= 3.2, < 5)
-    qu-redis (0.2.0)
-      qu (= 0.2.0)
-      redis-namespace
-
-GIT
   remote: git://github.com/mikel/mail.git
   revision: 9c313a401729b9aa9177878836829a61adf67b54
   branch: master
@@ -200,11 +187,6 @@ GEM
     concurrent-ruby (1.0.0.pre4)
     connection_pool (2.2.0)
     dalli (2.7.4)
-    delayed_job (4.1.1)
-      activesupport (>= 3.0, < 5.0)
-    delayed_job_active_record (4.1.0)
-      activerecord (>= 3.0, < 5)
-      delayed_job (>= 3.0, < 5)
     erubis (2.7.0)
     execjs (2.6.0)
     hitimes (1.2.3)
@@ -321,7 +303,6 @@ DEPENDENCIES
   byebug
   coffee-rails (~> 4.1.0)
   dalli (>= 2.2.1)
-  delayed_job_active_record
   globalid!
   jquery-rails!
   json
@@ -334,8 +315,6 @@ DEPENDENCIES
   nokogiri (>= 1.6.7.rc3)
   pg (>= 0.18.0)
   psych (~> 2.0)
-  qu-rails!
-  qu-redis
   que
   queue_classic!
   racc (>= 1.4.6)
