@@ -177,7 +177,6 @@ GEM
       execjs
     coffee-script-source (1.9.1.1)
     concurrent-ruby (1.0.0.pre4)
-    connection_pool (2.2.0)
     dalli (2.7.4)
     erubis (2.7.0)
     execjs (2.6.0)
@@ -220,21 +219,12 @@ GEM
     rake (10.4.2)
     rdoc (4.2.0)
     redcarpet (3.2.3)
-    redis (3.2.1)
-    redis-namespace (1.5.2)
-      redis (~> 3.0, >= 3.0.4)
     sdoc (0.4.1)
       json (~> 1.7, >= 1.7.7)
       rdoc (~> 4.0)
     sequel (4.27.0)
     serverengine (1.5.11)
       sigdump (~> 0.2.2)
-    sidekiq (3.5.1)
-      celluloid (~> 0.17.2)
-      connection_pool (~> 2.2, >= 2.2.0)
-      json (~> 1.0)
-      redis (~> 3.2, >= 3.2.1)
-      redis-namespace (~> 1.5, >= 1.5.2)
     sigdump (0.2.3)
     sneakers (2.3.5)
       bunny (~> 2.2.0)
@@ -298,7 +288,6 @@ DEPENDENCIES
   sass-rails!
   sdoc (~> 0.4.0)
   sequel
-  sidekiq
   sneakers
   sprockets (~> 4.0)!
   sprockets-rails (~> 3.0.0.beta3)!

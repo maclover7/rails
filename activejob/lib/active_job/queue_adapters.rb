@@ -109,7 +109,6 @@ module ActiveJob
 
     autoload :AsyncAdapter
     autoload :InlineAdapter
-    autoload :SidekiqAdapter
     autoload :SneakersAdapter
     autoload :SuckerPunchAdapter
     autoload :TestAdapter

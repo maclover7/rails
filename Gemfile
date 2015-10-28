@@ -48,7 +48,6 @@ gem 'dalli', '>= 2.2.1'
 
 # Active Job.
 group :job do
-  gem 'sidekiq', require: false
   gem 'sucker_punch', require: false
   gem 'sneakers', require: false
   gem 'sequel', require: false
