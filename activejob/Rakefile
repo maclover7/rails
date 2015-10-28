@@ -1,6 +1,6 @@
 require 'rake/testtask'
 
-ACTIVEJOB_ADAPTERS = %w(async inline sneakers sucker_punch test)
+ACTIVEJOB_ADAPTERS = %w(async inline sucker_punch test)
 
 task default: :test
 task test: 'test:default'
