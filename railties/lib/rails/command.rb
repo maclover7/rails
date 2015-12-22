@@ -1,7 +1,11 @@
 require 'rails/commands/commands_tasks'
+require 'active_support/callbacks'
 
 module Rails
   class Command #:nodoc:
+    include ActiveSupport::Callbacks
+    define_callbacks :run
+    
     attr_reader :argv
 
     def initialize(argv = [])
@@ -25,7 +29,9 @@ module Rails
       parse_options_for(command_name)
       @option_parser.parse! @argv
 
-      public_send(command_name)
+      run_callbacks :run do
+        public_send(command_name)
+      end
     end
 
     def self.options_for(command_name, &options_to_parse)
@@ -34,6 +40,14 @@ module Rails
 
     def self.set_banner(command_name, banner)
       options_for(command_name) { |opts, _| opts.banner = banner }
+    end
+    
+    def after_command(&block)
+      set_callback(:after, :run, block)
+    end
+    
+    def before_command(&block)
+      set_callback(:before, :run, block)
     end
 
     private
