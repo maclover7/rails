@@ -7,7 +7,7 @@ module ActionView
       template = Tilt.new(template_file)
       # Passing in a new Object is required in order
       # to render local variables correctly
-      template.render(Object.new, context)
+      template.render(Object.new, context).delete("\n")
     end
   end
 end
