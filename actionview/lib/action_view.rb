@@ -22,5 +22,7 @@
 #++
 
 require 'action_view/version'
+
 module ActionView
+  autoload :Renderer, 'action_view/renderer'
 end

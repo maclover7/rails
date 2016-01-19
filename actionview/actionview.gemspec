@@ -18,4 +18,6 @@ Gem::Specification.new do |s|
   s.files        = Dir['CHANGELOG.md', 'README.rdoc', 'MIT-LICENSE', 'lib/**/*']
   s.require_path = 'lib'
   s.requirements << 'none'
+
+  s.add_dependency 'tilt'
 end
