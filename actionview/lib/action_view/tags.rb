@@ -5,5 +5,6 @@ module ActionView
     autoload :Base,      'action_view/tags/base'
     ###
     autoload :AssetsTag, 'action_view/tags/assets_tag'
+    autoload :UrlTag,    'action_view/tags/url_tag'
   end
 end

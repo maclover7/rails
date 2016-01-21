@@ -18,7 +18,8 @@ module ActionView
         end
 
         options['src'] = path
-        tag('img', false, options)
+        options['closing_tag'] = false
+        tag('img', options)
       end
 
       def javascript_include_tag(path, options = {})
@@ -33,7 +34,8 @@ module ActionView
         end
 
         options['src'] = path
-        tag('script', true, options)
+        options['closing_tag'] = true
+        tag('script', options)
       end
 
       def stylesheet_link_tag(path, options = {})
@@ -49,8 +51,8 @@ module ActionView
 
         options['href'] = path
         options['rel'] = 'stylesheet'
-        tag('link', false, options)
-        #"<link href=" + "'#{path}'" + " rel='stylsheet'#{optionize(options)}>"
+        options['closing_tag'] = false
+        tag('link', options)
       end
     end
   end
