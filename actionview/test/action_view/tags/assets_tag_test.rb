@@ -8,7 +8,7 @@ class ActionView::Tags::AssetsTagTest < MiniTest::Test
       '<%= image_tag("xmlhr.png?body=1") %>'    => "<img src='/assets/xmlhr.png?body=1'>",
       '<%= image_tag("xmlhr.png#hash") %>'      => "<img src='/assets/xmlhr.png#hash'>",
       '<%= image_tag("xmlhr.png?123#hash") %>'  => "<img src='/assets/xmlhr.png?123#hash'>",
-      '<%= image_tag("xmlhr.png", height: "32") %>' => "<img src='/assets/xmlhr.png' height='32'>",
+      '<%= image_tag("xmlhr.png", height: "32") %>' => "<img height='32' src='/assets/xmlhr.png'>",
     }
 
     image_tag_tests.each do |method, tag|
@@ -38,13 +38,13 @@ class ActionView::Tags::AssetsTagTest < MiniTest::Test
 
   def test_stylesheet_link_tag
     stylesheet_link_tag_tests = {
-      '<%= stylesheet_link_tag("xmlhr") %>'               => "<link href='/assets/xmlhr.css' rel='stylsheet'>",
-      '<%= stylesheet_link_tag("xmlhr.css") %>'           => "<link href='/assets/xmlhr.css' rel='stylsheet'>",
-      '<%= stylesheet_link_tag("xmlhr.css?123") %>'       => "<link href='/assets/xmlhr.css?123' rel='stylsheet'>",
-      '<%= stylesheet_link_tag("xmlhr.css?body=1") %>'    => "<link href='/assets/xmlhr.css?body=1' rel='stylsheet'>",
-      '<%= stylesheet_link_tag("xmlhr.css#hash") %>'      => "<link href='/assets/xmlhr.css#hash' rel='stylsheet'>",
-      '<%= stylesheet_link_tag("xmlhr.css?123#hash") %>'  => "<link href='/assets/xmlhr.css?123#hash' rel='stylsheet'>",
-      '<%= stylesheet_link_tag("xmlhr", media: "all") %>' => "<link href='/assets/xmlhr.css' rel='stylsheet' media='all'>",
+      '<%= stylesheet_link_tag("xmlhr") %>'               => "<link href='/assets/xmlhr.css' rel='stylesheet'>",
+      '<%= stylesheet_link_tag("xmlhr.css") %>'           => "<link href='/assets/xmlhr.css' rel='stylesheet'>",
+      '<%= stylesheet_link_tag("xmlhr.css?123") %>'       => "<link href='/assets/xmlhr.css?123' rel='stylesheet'>",
+      '<%= stylesheet_link_tag("xmlhr.css?body=1") %>'    => "<link href='/assets/xmlhr.css?body=1' rel='stylesheet'>",
+      '<%= stylesheet_link_tag("xmlhr.css#hash") %>'      => "<link href='/assets/xmlhr.css#hash' rel='stylesheet'>",
+      '<%= stylesheet_link_tag("xmlhr.css?123#hash") %>'  => "<link href='/assets/xmlhr.css?123#hash' rel='stylesheet'>",
+      '<%= stylesheet_link_tag("xmlhr", media: "all") %>' => "<link media='all' href='/assets/xmlhr.css' rel='stylesheet'>",
     }
 
     stylesheet_link_tag_tests.each do |method, tag|

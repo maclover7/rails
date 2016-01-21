@@ -17,6 +17,12 @@ module ActionView
 
         output
       end
+
+      def tag(tag_name, closing_tag = false, options)
+        output = "<#{tag_name}#{optionize(options)}>"
+        output << "</#{tag_name}>" if closing_tag
+        output
+      end
     end
   end
 end

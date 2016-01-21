@@ -17,7 +17,8 @@ module ActionView
           raise ArgumentError, 'Improperly formatted image_tag'
         end
 
-        "<img src=" + "'#{path}'" + "#{optionize(options)}>"
+        options['src'] = path
+        tag('img', false, options)
       end
 
       def javascript_include_tag(path, options = {})
@@ -31,7 +32,8 @@ module ActionView
           path = "#{path}.js"
         end
 
-        "<script src=" + "'#{path}'" + "#{optionize(options)}></script>"
+        options['src'] = path
+        tag('script', true, options)
       end
 
       def stylesheet_link_tag(path, options = {})
@@ -45,7 +47,10 @@ module ActionView
           path = "#{path}.css"
         end
 
-        "<link href=" + "'#{path}'" + " rel='stylsheet'#{optionize(options)}>"
+        options['href'] = path
+        options['rel'] = 'stylesheet'
+        tag('link', false, options)
+        #"<link href=" + "'#{path}'" + " rel='stylsheet'#{optionize(options)}>"
       end
     end
   end
