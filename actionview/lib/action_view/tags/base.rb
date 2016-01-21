@@ -19,11 +19,11 @@ module ActionView
 
       def tag(tag_name, options)
         options.stringify_keys!
-        between_content = options.delete('between_content')
+        between_tags = options.delete('between_tags')
         closing_tag = options.delete('closing_tag')
         ###
         output = "<#{tag_name}#{optionize(options)}>"
-        output << between_content if between_content
+        output << between_tags if between_tags
         output << "</#{tag_name}>" if closing_tag
         output
       end

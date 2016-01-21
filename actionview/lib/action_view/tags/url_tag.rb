@@ -5,7 +5,7 @@ module ActionView
 
       def link_to(name, path, options = {})
         options['href'] = path
-        options['between_content'] = name
+        options['between_tags'] = name
         options['closing_tag'] = true
         tag('a', options)
       end

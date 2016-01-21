@@ -1,6 +1,7 @@
 require 'rake/testtask'
+require 'pathname'
 
-task default: [:test]
+task default: [:test, :rm_test_artifacts]
 
 Rake::TestTask.new do |t|
   t.libs << 'test'
@@ -8,4 +9,9 @@ Rake::TestTask.new do |t|
   t.warning = true
   t.verbose = true
   t.ruby_opts = ["--dev"] if defined?(JRUBY_VERSION)
+end
+
+task :rm_test_artifacts do
+  file = "#{Pathname.pwd}/test_tag.erb"
+  FileUtils.rm(file) if File.exist?(file)
 end
