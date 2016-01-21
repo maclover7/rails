@@ -50,6 +50,7 @@ PATH
       rails-dom-testing (~> 1.0, >= 1.0.5)
       rails-html-sanitizer (~> 1.0, >= 1.0.2)
     actionview (5.0.0.beta1)
+      activesupport
       tilt
     activejob (5.0.0.beta1)
       activesupport (= 5.0.0.beta1)

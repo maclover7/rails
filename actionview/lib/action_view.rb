@@ -26,4 +26,5 @@ require 'action_view/version'
 module ActionView
   autoload :Mixins,   'action_view/mixins'
   autoload :Renderer, 'action_view/renderer'
+  autoload :Tags,     'action_view/tags'
 end
