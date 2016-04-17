@@ -155,7 +155,7 @@ module ActionDispatch
 
     def request_method=(request_method) #:nodoc:
       if check_method(request_method)
-        @request_method = set_header("REQUEST_METHOD", request_method)
+        @request_method = set_header("REQUEST_METHOD".freeze, request_method)
       end
     end
 
@@ -168,7 +168,7 @@ module ActionDispatch
     end
 
     def http_auth_salt
-      get_header "action_dispatch.http_auth_salt"
+      get_header "action_dispatch.http_auth_salt".freeze
     end
 
     def show_exceptions? # :nodoc:
@@ -187,7 +187,7 @@ module ActionDispatch
     # even if it was overridden by middleware. See #request_method for
     # more information.
     def method
-      @method ||= check_method(get_header("rack.methodoverride.original_method") || get_header('REQUEST_METHOD'))
+      @method ||= check_method(get_header("rack.methodoverride.original_method".freeze) || get_header('REQUEST_METHOD'.freeze))
     end
 
     # Returns a symbol form of the #method
@@ -210,7 +210,7 @@ module ActionDispatch
     #    # get '/foo?bar'
     #    request.original_fullpath # => '/foo?bar'
     def original_fullpath
-      @original_fullpath ||= (get_header("ORIGINAL_FULLPATH") || fullpath)
+      @original_fullpath ||= (get_header("ORIGINAL_FULLPATH".freeze) || fullpath)
     end
 
     # Returns the +String+ full path including params of the last URL requested.
@@ -249,7 +249,7 @@ module ActionDispatch
     # (case-insensitive), which may need to be manually added depending on the
     # choice of JavaScript libraries and frameworks.
     def xml_http_request?
-      get_header('HTTP_X_REQUESTED_WITH') =~ /XMLHttpRequest/i
+      get_header('HTTP_X_REQUESTED_WITH'.freeze) =~ /XMLHttpRequest/i
     end
     alias :xhr? :xml_http_request?
 
@@ -261,7 +261,7 @@ module ActionDispatch
     # Returns the IP address of client as a +String+,
     # usually set by the RemoteIp middleware.
     def remote_ip
-      @remote_ip ||= (get_header("action_dispatch.remote_ip") || ip).to_s
+      @remote_ip ||= (get_header("action_dispatch.remote_ip".freeze) || ip).to_s
     end
 
     def remote_ip=(remote_ip)
@@ -287,25 +287,27 @@ module ActionDispatch
     alias_method :uuid, :request_id
 
     # Returns the lowercase name of the HTTP server software.
+    SERVER_SOFTWARE = 'SERVER_SOFTWARE'.freeze # :nodoc:
     def server_software
-      (get_header('SERVER_SOFTWARE') && /^([a-zA-Z]+)/ =~ get_header('SERVER_SOFTWARE')) ? $1.downcase : nil
+      (get_header(SERVER_SOFTWARE) && /^([a-zA-Z]+)/ =~ get_header(SERVER_SOFTWARE)) ? $1.downcase : nil
     end
 
-    # Read the request \body. This is useful for web services that need to
+    # Read the request body. This is useful for web services that need to
     # work with raw requests directly.
+    RAW_POST_DATA = 'RAW_POST_DATA'.freeze # :nodoc:
     def raw_post
-      unless has_header? 'RAW_POST_DATA'
+      unless has_header? RAW_POST_DATA
         raw_post_body = body
-        set_header('RAW_POST_DATA', raw_post_body.read(content_length))
+        set_header(RAW_POST_DATA, raw_post_body.read(content_length))
         raw_post_body.rewind if raw_post_body.respond_to?(:rewind)
       end
-      get_header 'RAW_POST_DATA'
+      get_header RAW_POST_DATA
     end
 
     # The request body is an IO input stream. If the RAW_POST_DATA environment
     # variable is already set, wrap it in a StringIO.
     def body
-      if raw_post = get_header('RAW_POST_DATA')
+      if raw_post = get_header(RAW_POST_DATA)
         raw_post.force_encoding(Encoding::BINARY)
         StringIO.new(raw_post)
       else
@@ -326,7 +328,7 @@ module ActionDispatch
     end
 
     def body_stream #:nodoc:
-      get_header('rack.input')
+      get_header('rack.input'.freeze)
     end
 
     # TODO This should be broken apart into AD::Request::Session and probably
@@ -349,7 +351,7 @@ module ActionDispatch
 
     # Override Rack's GET method to support indifferent access
     def GET
-      fetch_header("action_dispatch.request.query_parameters") do |k|
+      fetch_header("action_dispatch.request.query_parameters".freeze) do |k|
         rack_query_params = super || {}
         # Check for non UTF-8 parameter values, which would cause errors later
         Request::Utils.check_param_encoding(rack_query_params)
@@ -362,7 +364,7 @@ module ActionDispatch
 
     # Override Rack's POST method to support indifferent access
     def POST
-      fetch_header("action_dispatch.request.request_parameters") do
+      fetch_header("action_dispatch.request.request_parameters".freeze) do
         pr = parse_formatted_parameters(params_parsers) do |params|
           super || {}
         end
@@ -379,10 +381,10 @@ module ActionDispatch
     # Returns the authorization header regardless of whether it was specified directly or through one of the
     # proxy alternatives.
     def authorization
-      get_header('HTTP_AUTHORIZATION')   ||
-      get_header('X-HTTP_AUTHORIZATION') ||
-      get_header('X_HTTP_AUTHORIZATION') ||
-      get_header('REDIRECT_X_HTTP_AUTHORIZATION')
+      get_header('HTTP_AUTHORIZATION'.freeze)   ||
+      get_header('X-HTTP_AUTHORIZATION'.freeze) ||
+      get_header('X_HTTP_AUTHORIZATION'.freeze) ||
+      get_header('REDIRECT_X_HTTP_AUTHORIZATION'.freeze)
     end
 
     # True if the request came from localhost, 127.0.0.1, or ::1.
