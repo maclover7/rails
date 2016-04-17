@@ -500,7 +500,7 @@ module ActionDispatch
         routes.empty?
       end
 
-      def add_route(mapping, path_ast, name, anchor)
+      def add_route(name, journey_route)
         raise ArgumentError, "Invalid route name: '#{name}'" unless name.blank? || name.to_s.match(/^[_a-z]\w*$/i)
 
         if name && named_routes[name]
@@ -511,7 +511,7 @@ module ActionDispatch
             "http://guides.rubyonrails.org/routing.html#restricting-the-routes-created"
         end
 
-        route = @set.add_route(name, mapping)
+        route = @set.add_route(journey_route)
         named_routes[name] = route if name
 
         if route.segment_keys.include?(:controller)

@@ -1,7 +1,8 @@
 source 'https://rubygems.org'
 
 gemspec
-
+gem 'pry'
+gem 'm'
 # We need a newish Rake since Active Job sets its test tasks' descriptions.
 gem 'rake', '>= 11.1'
 

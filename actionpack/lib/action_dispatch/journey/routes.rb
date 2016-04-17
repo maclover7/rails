@@ -60,8 +60,7 @@ module ActionDispatch
         end
       end
 
-      def add_route(name, mapping)
-        route = mapping.make_route name, routes.length
+      def add_route(route)
         routes << route
         partition_route(route)
         clear_cache!

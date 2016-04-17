@@ -5,6 +5,7 @@ require 'active_support/core_ext/array/extract_options'
 require 'active_support/core_ext/regexp'
 require 'action_dispatch/routing/redirection'
 require 'action_dispatch/routing/endpoint'
+require 'action_dispatch/routing/route_builder'
 
 module ActionDispatch
   module Routing
@@ -54,133 +55,6 @@ module ActionDispatch
       end
 
       class Mapping #:nodoc:
-        ANCHOR_CHARACTERS_REGEX = %r{\A(\\A|\^)|(\\Z|\\z|\$)\Z}
-
-        attr_reader :requirements, :defaults
-        attr_reader :to, :default_controller, :default_action
-        attr_reader :required_defaults, :ast
-
-        def self.build(scope, set, ast, controller, default_action, to, via, formatted, options_constraints, anchor, options)
-          options = scope[:options].merge(options) if scope[:options]
-
-          defaults = (scope[:defaults] || {}).dup
-          scope_constraints = scope[:constraints] || {}
-
-          new set, ast, defaults, controller, default_action, scope[:module], to, formatted, scope_constraints, scope[:blocks] || [], via, options_constraints, anchor, options
-        end
-
-        def self.check_via(via)
-          if via.empty?
-            msg = "You should not use the `match` method in your router without specifying an HTTP method.\n" \
-              "If you want to expose your action to both GET and POST, add `via: [:get, :post]` option.\n" \
-              "If you want to expose your action to GET, use `get` in the router:\n" \
-              "  Instead of: match \"controller#action\"\n" \
-              "  Do: get \"controller#action\""
-            raise ArgumentError, msg
-          end
-          via
-        end
-
-        def self.normalize_path(path, format)
-          path = Mapper.normalize_path(path)
-
-          if format == true
-            "#{path}.:format"
-          elsif optional_format?(path, format)
-            "#{path}(.:format)"
-          else
-            path
-          end
-        end
-
-        def self.optional_format?(path, format)
-          format != false && !path.include?(':format') && !path.end_with?('/')
-        end
-
-        def initialize(set, ast, defaults, controller, default_action, modyoule, to, formatted, scope_constraints, blocks, via, options_constraints, anchor, options)
-          @defaults = defaults
-          @set = set
-
-          @to                 = to
-          @default_controller = controller
-          @default_action     = default_action
-          @ast                = ast
-          @anchor             = anchor
-          @via                = via
-          @internal           = options[:internal]
-
-          path_params = ast.find_all(&:symbol?).map(&:to_sym)
-
-          options = add_wildcard_options(options, formatted, ast)
-
-          options = normalize_options!(options, path_params, modyoule)
-
-          split_options = constraints(options, path_params)
-
-          constraints = scope_constraints.merge Hash[split_options[:constraints] || []]
-
-          if options_constraints.is_a?(Hash)
-            @defaults = Hash[options_constraints.find_all { |key, default|
-              URL_OPTIONS.include?(key) && (String === default || Fixnum === default)
-            }].merge @defaults
-            @blocks = blocks
-            constraints.merge! options_constraints
-          else
-            @blocks = blocks(options_constraints)
-          end
-
-          requirements, conditions = split_constraints path_params, constraints
-          verify_regexp_requirements requirements.map(&:last).grep(Regexp)
-
-          formats = normalize_format(formatted)
-
-          @requirements = formats[:requirements].merge Hash[requirements]
-          @conditions = Hash[conditions]
-          @defaults = formats[:defaults].merge(@defaults).merge(normalize_defaults(options))
-
-          @required_defaults = (split_options[:required_defaults] || []).map(&:first)
-        end
-
-        def make_route(name, precedence)
-          route = Journey::Route.new(name,
-                            application,
-                            path,
-                            conditions,
-                            required_defaults,
-                            defaults,
-                            request_method,
-                            precedence,
-                            @internal)
-
-          route
-        end
-
-        def application
-          app(@blocks)
-        end
-
-        def path
-          build_path @ast, requirements, @anchor
-        end
-
-        def conditions
-          build_conditions @conditions, @set.request_class
-        end
-
-        def build_conditions(current_conditions, request_class)
-          conditions = current_conditions.dup
-
-          conditions.keep_if do |k, _|
-            request_class.public_method_defined?(k)
-          end
-        end
-        private :build_conditions
-
-        def request_method
-          @via.map { |x| Journey::Route.verb_matcher(x) }
-        end
-        private :request_method
-
         JOINED_SEPARATORS = SEPARATORS.join # :nodoc:
 
         def build_path(ast, requirements, anchor)
@@ -1586,7 +1460,7 @@ module ActionDispatch
           controller = options.delete(:controller) || @scope[:controller]
           option_path = options.delete :path
           to = options.delete :to
-          via = Mapping.check_via Array(options.delete(:via) {
+          via = check_via Array(options.delete(:via) {
             @scope[:via]
           })
           formatted = options.delete(:format) { @scope[:format] }
@@ -1653,30 +1527,9 @@ to this:
         end
 
         def add_route(action, controller, options, _path, to, via, formatted, anchor, options_constraints) # :nodoc:
-          path = path_for_action(action, _path)
-          raise ArgumentError, "path is required" if path.blank?
-
-          action = action.to_s
-
-          default_action = options.delete(:action) || @scope[:action]
-
-          if action =~ /^[\w\-\/]+$/
-            default_action ||= action.tr('-', '_') unless action.include?("/")
-          else
-            action = nil
-          end
-
-          as = if !options.fetch(:as, true) # if it's set to nil or false
-                 options.delete(:as)
-               else
-                 name_for_action(options.delete(:as), action)
-               end
-
-          path = Mapping.normalize_path URI.parser.escape(path), formatted
-          ast = Journey::Parser.parse path
-
-          mapping = Mapping.build(@scope, @set, ast, controller, default_action, to, via, formatted, options_constraints, anchor, options)
-          @set.add_route(mapping, ast, as, anchor)
+          builder = RouteBuilder.new(self, @set)
+          builder.call(action, controller, options, _path, to, via, formatted, anchor, options_constraints)
+          #builder.call(action, conroller: controller, options: options, _path: _path, to: to, via: via, formatted: formatted, anchor: anchor, options_constraints: options_constraints)
         end
 
         # You can specify what Rails should route "/" to with the root method:
@@ -1828,16 +1681,6 @@ to this:
             @scope = @scope.parent
           end
 
-          def path_for_action(action, path) #:nodoc:
-            return "#{@scope[:path]}/#{path}" if path
-
-            if canonical_action?(action)
-              @scope[:path].to_s
-            else
-              "#{@scope[:path]}/#{action_path(action)}"
-            end
-          end
-
           def action_path(name) #:nodoc:
             @scope[:path_names][name.to_sym] || name
           end
@@ -1907,6 +1750,18 @@ to this:
         def match_root_route(options)
           name = has_named_route?(:root) ? nil : :root
           match '/', { :as => name, :via => :get }.merge!(options)
+        end
+
+        def check_via(via)
+          if via.empty?
+            msg = "You should not use the `match` method in your router without specifying an HTTP method.\n" \
+              "If you want to expose your action to both GET and POST, add `via: [:get, :post]` option.\n" \
+              "If you want to expose your action to GET, use `get` in the router:\n" \
+              "  Instead of: match \"controller#action\"\n" \
+              "  Do: get \"controller#action\""
+            raise ArgumentError, msg
+          end
+          via
         end
       end
 
