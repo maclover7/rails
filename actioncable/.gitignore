@@ -1,3 +1,4 @@
 /dist
 /lib/assets/compiled
+/node_modules
 /tmp
