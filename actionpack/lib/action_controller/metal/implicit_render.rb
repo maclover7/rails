@@ -32,9 +32,9 @@ module ActionController
     include BasicImplicitRender
 
     def default_render(*args)
-      if template_exists?(action_name.to_s, _prefixes, variants: request.variant)
+      if @_lookup_context.template_exists?(action_name.to_s, _prefixes, variants: request.variant)
         render(*args)
-      elsif any_templates?(action_name.to_s, _prefixes)
+      elsif @_lookup_context.any_templates?(action_name.to_s, _prefixes)
         message = "#{self.class.name}\##{action_name} is missing a template " \
           "for this request format and variant.\n" \
           "\nrequest.formats: #{request.formats.map(&:to_s).inspect}" \
@@ -61,7 +61,7 @@ module ActionController
     end
 
     def method_for_action(action_name)
-      super || if template_exists?(action_name.to_s, _prefixes)
+      super || if @_lookup_context.template_exists?(action_name.to_s, _prefixes)
         "default_render"
       end
     end
