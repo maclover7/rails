@@ -178,10 +178,6 @@ module ActionView #:nodoc:
       def cache_template_loading=(value)
         ActionView::Resolver.caching = value
       end
-
-      def xss_safe? #:nodoc:
-        true
-      end
     end
 
     attr_accessor :view_renderer
