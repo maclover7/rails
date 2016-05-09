@@ -29,13 +29,13 @@ end
 
 namespace :assets do
   root_path = Pathname.new(dir)
-  destination_paths = [ root_path.join("lib/assets/compiled"), root_path.join("dist") ]
 
   desc "Compile dist/action_cable.js"
   task :compile do
     puts 'Compiling Action Cable assets...'
 
     precompile_list = %w(action_cable.js)
+    destination_path = root_path.join("lib/assets/compiled")
 
     environment = Sprockets::Environment.new
     environment.gzip = false
@@ -50,14 +50,38 @@ namespace :assets do
     manifest = Sprockets::Manifest.new(environment.index, compile_path)
     manifest.compile(precompile_list)
 
-    destination_paths.each { |path| path.rmtree if path.exist? }
+    destination_path.rmtree if destination_path.exist?
 
     manifest.assets.each do |path, fingerprint_path|
-      destination_paths.each do |destination_path|
-        destination_path.join(path).dirname.mkpath
-        FileUtils.cp(compile_path.join(fingerprint_path), destination_path.join(path))
-      end
+      destination_path.join(path).dirname.mkpath
+      FileUtils.cp(compile_path.join(fingerprint_path), destination_path.join(path))
     end
+
+    puts 'Done'
+  end
+
+  desc "Compile ActionCable package for npm"
+  task :npm do
+    puts 'Compiling Action Cable assets for npm...'
+
+    precompile_list = %w(index.coffee)
+    destination_path = root_path.join('dist', 'actioncable.js')
+
+    environment = Sprockets::Environment.new
+    environment.gzip = false
+    environment.append_path root_path
+
+    compile_path = root_path.join("tmp/sprockets")
+    compile_path.rmtree if compile_path.exist?
+    compile_path.mkpath
+
+    manifest = Sprockets::Manifest.new(environment.index, compile_path)
+    manifest.compile(precompile_list)
+
+    destination_path.rmtree if destination_path.exist?
+
+    destination_path.dirname.mkpath
+    FileUtils.cp(compile_path.join(manifest.assets['index.js']), destination_path)
 
     puts 'Done'
   end
