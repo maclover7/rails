@@ -70,10 +70,6 @@ module ActionView
         @details_keys.clear
       end
 
-      def self.digest_caches
-        @details_keys.values.map(&:digest_cache)
-      end
-
       attr_reader :digest_cache
 
       def initialize
