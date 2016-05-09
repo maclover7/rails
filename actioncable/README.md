@@ -460,6 +460,59 @@ with all the popular application servers -- Unicorn, Puma and Passenger.
 Action Cable does not work with WEBrick, because WEBrick does not support the
 Rack socket hijacking API.
 
+## npm usage
+
+Rails also publishes the client-side ActionCable as an officially supported npm 
+module, intended for usage in standalone frontends that communicate with a Rails
+API. 
+
+### Installation
+
+```
+npm install actioncable --save
+```
+
+### Usage
+
+```coffeescript
+ActionCable = require('actioncable')
+
+cable = ActionCable.createConsumer('wss://RAILS-API-PATH.com/cable')
+cable.subscriptions.create { channel: 'AppearanceChannel' },
+  # Called when the subscription is ready for use on the server
+  connected: ->
+    @install()
+    @appear()
+
+  # Called when the WebSocket connection is closed
+  disconnected: ->
+    @uninstall()
+
+  # Called when the subscription is rejected by the server
+  rejected: ->
+    @uninstall()
+
+  appear: ->
+    # Calls `AppearanceChannel#appear(data)` on the server
+    @perform("appear", appearing_on: $("main").data("appearing-on"))
+
+  away: ->
+    # Calls `AppearanceChannel#away` on the server
+    @perform("away")
+```
+
+When using ActionCable with a standalone frontend, you must take care to 
+allow connections from the request origin if it's different from the API
+host:
+
+```ruby
+# config/environments/production.rb 
+
+Rails.application.configure do
+  config.action_cable.allowed_request_origins = ['https://FRONTEND-HOST.com']
+end
+```
+
 ## License
 
 Action Cable is released under the MIT license:
