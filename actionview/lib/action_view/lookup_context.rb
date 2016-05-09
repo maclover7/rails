@@ -63,18 +63,18 @@ module ActionView
           details = details.dup
           details[:formats] &= Template::Types.symbols
         end
-        @details_keys[details] ||= new
+        @details_keys[details] ||= Concurrent::Map.new
       end
 
       def self.clear
         @details_keys.clear
       end
 
-      attr_reader :digest_cache
+      # attr_reader :digest_cache
 
-      def initialize
-        @digest_cache = Concurrent::Map.new
-      end
+      # def initialize
+        # @digest_cache = Concurrent::Map.new
+      # end
     end
 
     # Add caching behavior on top of Details.
@@ -232,7 +232,7 @@ module ActionView
     end
 
     def digest_cache
-      details_key.digest_cache
+      details_key
     end
 
     def initialize_details(target, details)
