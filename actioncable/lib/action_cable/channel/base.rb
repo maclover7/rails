@@ -1,4 +1,5 @@
 require "set"
+require 'active_support/deprecation'
 
 module ActionCable
   module Channel
@@ -233,6 +234,23 @@ module ActionCable
         def subscribe_to_channel
           run_callbacks :subscribe do
             subscribed
+          end
+
+          # Only issue deprecation warning if the subscribed method is not owned
+          # by ActionCable::Channel::Base. This ensures that only classes that
+          # define the subscribed method on their own (don't just inherit it))
+          # will receive the deprecation warning.
+          if method(:subscribed).owner != ActionCable::Channel::Base
+            ActiveSupport::Deprecation.warn(<<-MSG.squish)
+            In Rails 5.1, behavior regarding the #subscribed method will be changing.
+            The method is now removed in favor of using built-in `before_subscribe`,
+            `after_subscribe`, and `around_subscribe` callbacks.
+
+            For example, if you wish to reject a subscription, you would use a
+            `before_subscribe` callback for that. If you wish to send a message
+            immediately after a new subscription is created, you would do that in
+            an `after_subscribe` callback.
+          MSG
           end
 
           if subscription_rejected?
