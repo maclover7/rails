@@ -107,6 +107,36 @@ module ActionView
       autoload :Types
     end
 
+    # TODO: Consider moving this to be on the lookup context or something like
+    # that.
+    module CompiledTemplatesCache
+      class Store
+        def set(k, v)
+          raise NotImplementedError
+        end
+
+        def get(k)
+          raise NotImplementedError
+        end
+      end
+
+      class InlineStore < Store
+        def initialize
+          @hash = {}
+        end
+
+        def set(k, v)
+          @hash[k] = v
+        end
+
+        def get(k)
+          @hash[k]
+        end
+      end
+    end
+
+    @@compiled_templates_cache_store = CompiledTemplatesCache::InlineStore.new
+
     extend Template::Handlers
 
     attr_accessor :locals, :formats, :variants, :virtual_path
@@ -264,6 +294,10 @@ module ActionView
         end
       end
 
+      def compile_and_cache
+        @@compiled_templates_cache_store.set(method_name, @handler.call(self))
+      end
+
       # Among other things, this method is responsible for properly setting
       # the encoding of the compiled template.
       #
@@ -278,14 +312,20 @@ module ActionView
       # regardless of the original source encoding.
       def compile(mod) #:nodoc:
         encode!
-        method_name = self.method_name
-        code = @handler.call(self)
+
+        code = @@compiled_templates_cache_store.get(template_cache_key)
+
+        unless code
+          #Kernel.puts "&&& the handler has been called"
+          code = @handler.call(self)
+          @@compiled_templates_cache_store.set(template_cache_key, code)
+        end
 
         # Make sure that the resulting String to be eval'd is in the
         # encoding of the code
         source = <<-end_src
           def #{method_name}(local_assigns, output_buffer)
-            _old_virtual_path, @virtual_path = @virtual_path, #{@virtual_path.inspect};_old_output_buffer = @output_buffer;#{locals_code};#{code}
+            _old_virtual_path, @virtual_path = @virtual_path, #{@virtual_path.inspect};_old_output_buffer = @output_buffer;#{locals_code};#{@@compiled_templates_cache_store.get(template_cache_key)}
           ensure
             @virtual_path, @output_buffer = _old_virtual_path, _old_output_buffer
           end
@@ -335,6 +375,15 @@ module ActionView
           m
         end
       end
+
+      # TODO: Find a different cache key to use, than just method_name. Since it
+      # includes the current ActionView::Template's object ID in the key, this
+      # means that all cache requests are _misses_ right now. I tried to use
+      # @updated_at instead of __id__, but that wasn't unique enough.
+      #
+      # Send help.
+      # --JM
+      alias template_cache_key method_name
 
       def identifier_method_name #:nodoc:
         inspect.tr("^a-z_".freeze, "_".freeze)

@@ -55,6 +55,45 @@ module ActionView
       PartialRenderer.collection_cache = app.config.action_controller.cache_store
     end
 
+    initializer "action_view.eager_compile_templates" do |app|
+      ActiveSupport.on_load(:action_view) do
+        app.config.action_view.eager_compile_templates = true
+
+        return unless app.config.action_view.eager_compile_templates
+
+        puts "Loading data to eager compile templates"
+
+        ctx = ApplicationController.new.lookup_context
+        template_paths = []
+        templates = []
+
+        # Create a raw list of paths where templates are stored.
+        ctx.view_paths.paths.each do |path|
+          template_paths << path.instance_variable_get(:@path)
+        end
+
+        # Go through the raw list, and create a list of every single template.
+        template_paths.each do |path|
+          templates.concat Dir.glob("#{path}/**/*").reject {|fn| File.directory?(fn) }
+        end
+
+        puts "Data analysis complete! Beginning to eager compile templates (Note: this could take a while)"
+
+        # Go through the list of templates, compile down the raw template code, and cache the result.
+        templates.each do |template_path|
+          pieces = File.basename(template_path).split(".".freeze)
+          pieces.shift
+          extension = pieces.pop
+          handler = Template.handler_for_extension(extension)
+
+          t = ActionView::Template.new(File.read(template_path), File.expand_path(template_path), handler, {})
+          t.send :compile_and_cache
+        end
+
+        puts "Eager compilation of templates is complete!"
+      end
+    end
+
     rake_tasks do |app|
       unless app.config.api_only
         load "action_view/tasks/cache_digests.rake"
