@@ -42,20 +42,20 @@ module ActionView #:nodoc:
       METHOD
     end
 
-    def find(*args)
-      find_all(*args).first || raise(MissingTemplate.new(self, *args))
+    def find(metadata, prefixes)
+      find_all_metadata(metadata, prefixes).first || raise(MissingTemplate.new(self, metadata))
     end
 
-    def find_file(path, prefixes = [], *args)
-      _find_all(path, prefixes, args, true).first || raise(MissingTemplate.new(self, path, prefixes, *args))
+    def find_file(metadata, prefixes)
+      find_all_metadata(metadata, prefixes).first || raise(MissingTemplate.new(self, metadata, prefixes))
     end
 
-    def find_all(path, prefixes = [], *args)
-      _find_all path, prefixes, args, false
+    def find_all(metadata, prefixes)
+      find_all_metadata metadata, prefixes
     end
 
-    def exists?(path, prefixes, *args)
-      find_all(path, prefixes, *args).any?
+    def exists?(metadata, prefixes)
+      find_all_metadata(metadata, prefixes).any?
     end
 
     def find_all_with_query(query) # :nodoc:
@@ -69,26 +69,23 @@ module ActionView #:nodoc:
 
     private
 
-      def _find_all(path, prefixes, args, outside_app)
+      def find_all_metadata(metadata, prefixes)
         prefixes = [prefixes] if String === prefixes
         prefixes.each do |prefix|
+          metadata.prefix = prefix
           paths.each do |resolver|
-            if outside_app
-              templates = resolver.find_all_anywhere(path, prefix, *args)
-            else
-              templates = resolver.find_all(path, prefix, *args)
-            end
+            templates = resolver.find(metadata)
             return templates unless templates.empty?
           end
         end
-        []
+       []
       end
 
       def typecast(paths)
         paths.map do |path|
           case path
           when Pathname, String
-            OptimizedFileSystemResolver.new path.to_s
+            ActionView::Resolver::JonResolver.new path.to_s, :optimized
           else
             path
           end

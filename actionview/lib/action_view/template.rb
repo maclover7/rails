@@ -103,6 +103,7 @@ module ActionView
       autoload :Error
       autoload :Handlers
       autoload :HTML
+      autoload :TemplateLookupMetadata
       autoload :Text
       autoload :Types
     end

@@ -113,20 +113,21 @@ module ActionView
       end
 
       def find(name, prefixes = [], partial = false, keys = [], options = {})
-        @view_paths.find(*args_for_lookup(name, prefixes, partial, keys, options))
+        create_metadata_and_search(:find, *args_for_lookup(name, prefixes, partial, keys, options), false)
       end
       alias :find_template :find
 
       def find_file(name, prefixes = [], partial = false, keys = [], options = {})
-        @view_paths.find_file(*args_for_lookup(name, prefixes, partial, keys, options))
+        create_metadata_and_search(:find_file, *args_for_lookup(name, prefixes, partial, keys, options), true)
       end
 
       def find_all(name, prefixes = [], partial = false, keys = [], options = {})
-        @view_paths.find_all(*args_for_lookup(name, prefixes, partial, keys, options))
+        create_metadata_and_search(:find_all, *args_for_lookup(name, prefixes, partial, keys, options), false)
       end
 
       def exists?(name, prefixes = [], partial = false, keys = [], **options)
-        @view_paths.exists?(*args_for_lookup(name, prefixes, partial, keys, options))
+        options = options.extract_options
+        create_metadata_and_search(:exists?, *args_for_lookup(name, prefixes, partial, keys, options), false)
       end
       alias :template_exists? :exists?
 
@@ -150,6 +151,19 @@ module ActionView
       end
 
     protected
+
+      def create_metadata_and_search(method, path, prefixes, partial = false, details = {}, key = nil, locals = [], outside_app_allowed = false)
+        details.merge!({
+          name: path,
+          is_partial: partial,
+          cache_key: key,
+          locals: locals,
+          outside_app_allowed: outside_app_allowed
+        })
+
+        metadata = ActionView::Template::TemplateLookupMetadata.new(details)
+        @view_paths.public_send(method, metadata, prefixes)
+      end
 
       def args_for_lookup(name, prefixes, partial, keys, details_options) #:nodoc:
         name, prefixes = normalize_name(name, prefixes)

@@ -5,6 +5,8 @@ require "action_view/template"
 require "thread"
 require "concurrent/map"
 
+require "action_view/template/jon_resolver"
+
 module ActionView
   # = Action View Resolver
   class Resolver
