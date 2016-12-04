@@ -8,6 +8,16 @@ require "concurrent/map"
 module ActionView
   # = Action View Resolver
   class Resolver
+    METADATA_KEYS = [
+      :name, :prefix, :is_partial, :details, :cache_key, :locals, :outside_app_allowed
+    ]
+
+    class TemplateLookupMetadata < Struct.new(*METADATA_KEYS)
+      def virtual_path
+        Path.build(name, prefix, is_partial)
+      end
+    end
+
     # Keeps all information about view path and builds virtual path.
     class Path
       attr_reader :name, :prefix, :partial, :virtual
@@ -142,15 +152,19 @@ module ActionView
 
     # Normalizes the arguments and passes it on to find_templates.
     def find_all(name, prefix = nil, partial = false, details = {}, key = nil, locals = [])
-      cached(key, [name, prefix, partial], details, locals) do
-        find_templates(name, prefix, partial, details)
-      end
+      metadata = build_metadata(name, prefix, partial, details, key, locals, false)
+      cached_find(metadata)
+      #cached(key, [name, prefix, partial], details, locals) do
+        #find_templates(name, prefix, partial, details)
+      #end
     end
 
     def find_all_anywhere(name, prefix, partial = false, details = {}, key = nil, locals = [])
-      cached(key, [name, prefix, partial], details, locals) do
-        find_templates(name, prefix, partial, details, true)
-      end
+      metadata = build_metadata(name, prefix, partial, details, key, locals, true)
+      cached_find(metadata)
+      #cached(key, [name, prefix, partial], details, locals) do
+        #find_templates(name, prefix, partial, details, true)
+      #end
     end
 
     def find_all_with_query(query) # :nodoc:
@@ -160,6 +174,35 @@ module ActionView
   private
 
     delegate :caching?, to: :class
+
+    def build_metadata(name, prefix, partial, details, key, locals, outside_app_allowed)
+      TemplateLookupMetadata.new(name, prefix, partial, details, key, locals, outside_app_allowed)
+    end
+
+    def build_query(metadata)
+      ""
+    end
+
+    def cached_find(metadata)
+      cached(metadata.cache_key, [metadata.name, metadata.prefix, metadata.is_partial], metadata.details, metadata.locals) do
+        find(metadata)
+      end
+    end
+
+    def find(metadata)
+      query = build_query(metadata)
+      template_files = run_query(query, metadata)
+      templates = generate_templates(template_files, metadata)
+      templates
+    end
+
+    def generate_templates(template_files, metadata)
+      []
+    end
+
+    def run_query(query, metadata)
+      []
+    end
 
     # This is what child classes implement. No defaults are needed
     # because Resolver guarantees that the arguments are present and
@@ -219,6 +262,39 @@ module ActionView
         query(path, details, details[:formats], outside_app_allowed)
       end
 
+      def generate_templates(template_files, metadata)
+        template_files.map do |template_path|
+          handler, format, variant = extract_handler_and_format_and_variant(template_path, metadata.details[:formats])
+
+          Template.new(
+            File.binread(template_path),
+            File.expand_path(template_path),
+            handler,
+
+            {
+              virtual_path: metadata.virtual_path.virtual,
+              format: format,
+              variant: variant,
+              updated_at: File.mtime(template_path)
+            }
+          )
+        end
+      end
+
+      def run_query(query, metadata)
+        files = Dir[query].uniq.reject do |filename|
+          File.directory?(filename) ||
+            # deals with case-insensitive file systems.
+            !File.fnmatch(query, filename, File::FNM_EXTGLOB)
+        end
+
+        if !metadata.outside_app_allowed
+          files.reject! { |filename| !inside_path?(@path, filename) }
+        end
+
+        files
+      end
+
       def query(path, details, formats, outside_app_allowed)
         query = build_query(path, details)
 
@@ -257,8 +333,9 @@ module ActionView
       end
 
       # Helper for building query glob string based on resolver's pattern.
-      def build_query(path, details)
+      def build_query(metadata)
         query = @pattern.dup
+        path = metadata.virtual_path
 
         prefix = path.prefix.empty? ? "" : "#{escape_entry(path.prefix)}\\1"
         query.gsub!(/:prefix(\/)?/, prefix)
@@ -266,7 +343,7 @@ module ActionView
         partial = escape_entry(path.partial? ? "_#{path.name}" : path.name)
         query.gsub!(/:action/, partial)
 
-        details.each do |ext, candidates|
+        metadata.details.each do |ext, candidates|
           if ext == :variants && candidates == :any
             query.gsub!(/:#{ext}/, "*")
           else
@@ -276,6 +353,26 @@ module ActionView
 
         File.expand_path(query, @path)
       end
+
+      #def build_query(path, details)
+        #query = @pattern.dup
+
+        #prefix = path.prefix.empty? ? "" : "#{escape_entry(path.prefix)}\\1"
+        #query.gsub!(/:prefix(\/)?/, prefix)
+
+        #partial = escape_entry(path.partial? ? "_#{path.name}" : path.name)
+        #query.gsub!(/:action/, partial)
+
+        #details.each do |ext, candidates|
+          #if ext == :variants && candidates == :any
+            #query.gsub!(/:#{ext}/, "*")
+          #else
+            #query.gsub!(/:#{ext}/, "{#{candidates.compact.uniq.join(',')}}")
+          #end
+        #end
+
+        #File.expand_path(query, @path)
+      #end
 
       def escape_entry(entry)
         entry.gsub(/[*?{}\[\]]/, '\\\\\\&'.freeze)
@@ -361,19 +458,33 @@ module ActionView
 
   # An Optimized resolver for Rails' most common case.
   class OptimizedFileSystemResolver < FileSystemResolver #:nodoc:
-    def build_query(path, details)
-      query = escape_entry(File.join(@path, path))
+    def build_query(metadata)
+      query = escape_entry(File.join(@path, metadata.virtual_path))
 
       exts = EXTENSIONS.map do |ext, prefix|
-        if ext == :variants && details[ext] == :any
+        if ext == :variants && metadata.details[ext] == :any
           "{#{prefix}*,}"
         else
-          "{#{details[ext].compact.uniq.map { |e| "#{prefix}#{e}," }.join}}"
+          "{#{metadata.details[ext].compact.uniq.map { |e| "#{prefix}#{e}," }.join}}"
         end
       end.join
 
       query + exts
     end
+
+    #def build_query(path, details)
+      #query = escape_entry(File.join(@path, path))
+
+      #exts = EXTENSIONS.map do |ext, prefix|
+        #if ext == :variants && details[ext] == :any
+          #"{#{prefix}*,}"
+        #else
+          #"{#{details[ext].compact.uniq.map { |e| "#{prefix}#{e}," }.join}}"
+        #end
+      #end.join
+
+      #query + exts
+    #end
   end
 
   # The same as FileSystemResolver but does not allow templates to store
