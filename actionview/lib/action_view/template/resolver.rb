@@ -321,11 +321,6 @@ module ActionView
         entry.gsub(/[*?{}\[\]]/, '\\\\\\&'.freeze)
       end
 
-      # Returns the file mtime from the filesystem.
-      def mtime(p)
-        File.mtime(p)
-      end
-
       # Extract handler, formats and variant from path. If a format cannot be found neither
       # from the path, or the handler, we should return the array of formats given
       # to the resolver.
