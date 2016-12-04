@@ -154,17 +154,11 @@ module ActionView
     def find_all(name, prefix = nil, partial = false, details = {}, key = nil, locals = [])
       metadata = build_metadata(name, prefix, partial, details, key, locals, false)
       cached_find(metadata)
-      #cached(key, [name, prefix, partial], details, locals) do
-        #find_templates(name, prefix, partial, details)
-      #end
     end
 
     def find_all_anywhere(name, prefix, partial = false, details = {}, key = nil, locals = [])
       metadata = build_metadata(name, prefix, partial, details, key, locals, true)
       cached_find(metadata)
-      #cached(key, [name, prefix, partial], details, locals) do
-        #find_templates(name, prefix, partial, details, true)
-      #end
     end
 
     def find_all_with_query(query) # :nodoc:
@@ -258,7 +252,6 @@ module ActionView
     private
 
       def find_templates(name, prefix, partial, details, outside_app_allowed = false)
-        path = Path.build(name, prefix, partial)
         query(path, details, details[:formats], outside_app_allowed)
       end
 
@@ -293,29 +286,6 @@ module ActionView
         end
 
         files
-      end
-
-      def query(path, details, formats, outside_app_allowed)
-        query = build_query(path, details)
-
-        template_paths = find_template_paths(query)
-        template_paths = reject_files_external_to_app(template_paths) unless outside_app_allowed
-
-        template_paths.map do |template|
-          handler, format, variant = extract_handler_and_format_and_variant(template, formats)
-          contents = File.binread(template)
-
-          Template.new(contents, File.expand_path(template), handler,
-            virtual_path: path.virtual,
-            format: format,
-            variant: variant,
-            updated_at: mtime(template)
-          )
-        end
-      end
-
-      def reject_files_external_to_app(files)
-        files.reject { |filename| !inside_path?(@path, filename) }
       end
 
       def find_template_paths(query)
@@ -353,26 +323,6 @@ module ActionView
 
         File.expand_path(query, @path)
       end
-
-      #def build_query(path, details)
-        #query = @pattern.dup
-
-        #prefix = path.prefix.empty? ? "" : "#{escape_entry(path.prefix)}\\1"
-        #query.gsub!(/:prefix(\/)?/, prefix)
-
-        #partial = escape_entry(path.partial? ? "_#{path.name}" : path.name)
-        #query.gsub!(/:action/, partial)
-
-        #details.each do |ext, candidates|
-          #if ext == :variants && candidates == :any
-            #query.gsub!(/:#{ext}/, "*")
-          #else
-            #query.gsub!(/:#{ext}/, "{#{candidates.compact.uniq.join(',')}}")
-          #end
-        #end
-
-        #File.expand_path(query, @path)
-      #end
 
       def escape_entry(entry)
         entry.gsub(/[*?{}\[\]]/, '\\\\\\&'.freeze)
@@ -471,20 +421,6 @@ module ActionView
 
       query + exts
     end
-
-    #def build_query(path, details)
-      #query = escape_entry(File.join(@path, path))
-
-      #exts = EXTENSIONS.map do |ext, prefix|
-        #if ext == :variants && details[ext] == :any
-          #"{#{prefix}*,}"
-        #else
-          #"{#{details[ext].compact.uniq.map { |e| "#{prefix}#{e}," }.join}}"
-        #end
-      #end.join
-
-      #query + exts
-    #end
   end
 
   # The same as FileSystemResolver but does not allow templates to store
