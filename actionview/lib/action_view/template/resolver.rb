@@ -205,11 +205,6 @@ module ActionView
       raise NotImplementedError, "Subclasses must implement a find_templates(name, prefix, partial, details) method"
     end
 
-    # Helpers that builds a path. Useful for building virtual paths.
-    def build_path(name, prefix, partial)
-      Path.build(name, prefix, partial)
-    end
-
     # Handles templates caching. If a key is given and caching is on
     # always check the cache before hitting the resolver. Otherwise,
     # it always hits the resolver but if the key is present, check if the
@@ -229,12 +224,10 @@ module ActionView
 
     # Ensures all the resolver information is set in the template.
     def decorate(templates, path_info, details, locals) #:nodoc:
-      cached = nil
       templates.each do |t|
         t.locals         = locals
         t.formats        = details[:formats]  || [:html] if t.formats.empty?
         t.variants       = details[:variants] || []      if t.variants.empty?
-        t.virtual_path ||= (cached ||= build_path(*path_info))
       end
     end
   end
