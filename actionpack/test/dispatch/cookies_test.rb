@@ -120,6 +120,13 @@ class CookiesTest < ActionController::TestCase
       head :ok
     end
 
+    def rafael
+      unless cookies[:name].present?
+        cookies[:name] = "Alice"
+      end
+      render plain: "Home"
+    end
+
     alias delete_cookie logout
 
     def delete_cookie_with_path
@@ -393,6 +400,27 @@ class CookiesTest < ActionController::TestCase
     cookies.delete("user_name")
     assert cookies.deleted?("user_name")
     assert_equal false, cookies.deleted?("another")
+  end
+
+  # Ensure all HTTP methods have their cookies updated
+  [:get, :post, :patch, :put, :delete, :head].each do |method|
+    define_method("test_deleting_cookie_#{method}") do
+      request.cookies[:user_name] = "Joe"
+      public_send method, :logout
+      assert_nil cookies[:user_name]
+    end
+  end
+
+  def test_rafael
+    get :rafael
+    #assert_response :ok
+    #assert_equal "Alice", cookies[:name]
+
+    cookies[:name] = "Bob"
+
+    get :rafael
+    assert_response :ok
+    assert_equal "Bob", cookies[:name]
   end
 
   def test_deleted_cookie_predicate_with_mismatching_options
